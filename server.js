@@ -39,6 +39,18 @@ function cleanMapEditorConfig(id, raw) {
   };
   const spawns = Array.isArray(raw.spawns) ? raw.spawns.slice(0, 2).map((v) => point(v, true)) : null;
   const sites = Array.isArray(raw.sites) ? raw.sites.slice(0, 2).map((v) => point(v)) : null;
+  const boxes = Array.isArray(raw.boxes) ? raw.boxes.slice(0, 800).map((b) => {
+    if (!b || typeof b !== 'object') return null;
+    const x = Number(b.x), z = Number(b.z), w = Number(b.w), d = Number(b.d), h = Number(b.h);
+    if (![x, z, w, d, h].every(Number.isFinite)) return null;
+    const kinds = new Set(['wall', 'house', 'crate', 'stack', 'pillar', 'barrel', 'tree', 'planter', 'container', 'outer', 'rock']);
+    return {
+      x: Math.max(-hx - 20, Math.min(hx + 20, x)), z: Math.max(-hz - 20, Math.min(hz + 20, z)),
+      w: Math.max(.3, Math.min(hx * 2 + 20, w)), d: Math.max(.3, Math.min(hz * 2 + 20, d)), h: Math.max(.25, Math.min(20, h)),
+      k: kinds.has(b.k) ? b.k : 'crate',
+    };
+  }).filter(Boolean) : null;
+  const goals = Array.isArray(raw.goals) ? raw.goals.slice(0, 100).map((v) => point(v)).filter(Boolean).map((v) => v.slice(0, 2)) : null;
   const rawSpawnY = Number(raw.spawnY), rawSizeScale = Number(raw.sizeScale);
   return {
     halfX: hx, halfZ: hz,
@@ -48,6 +60,8 @@ function cleanMapEditorConfig(id, raw) {
     sizeScale: Math.max(.25, Math.min(3, Number.isFinite(rawSizeScale) ? rawSizeScale : 1)),
     spawns: spawns?.length === 2 && spawns.every(Boolean) ? spawns : null,
     sites: sites?.length === 2 && sites.every(Boolean) ? sites.map((v) => v.slice(0, 2)) : (base.sites || []).map((v) => [...v]),
+    boxes: Array.isArray(raw.boxes) ? boxes : base.boxes.map((b) => ({ ...b })),
+    goals: Array.isArray(raw.goals) ? goals : base.goals.map((v) => [...v]),
     playerScale: Math.max(.55, Math.min(1.5, Number(raw.playerScale) || 1)),
   };
 }
@@ -57,7 +71,7 @@ function rebuildBoxes() {
 }
 // Her oda kendi haritasını tutar; o odayla ilgili işlemden önce global MAP/BOXES o haritaya ayarlanır
 let activeMap = legacyCustomMap ? 'legacy' : null;
-const MATCH_MAPS = MAP_LIST.filter((id) => id !== 'range');
+const MATCH_MAPS = MAP_LIST.filter((id) => id !== 'range' && id !== 'citadel_spike');
 const SPIKE_MAPS = MAP_SPIKE_LIST.filter((id) => id !== 'range');
 const chooseMap = (id, mode = 'elimination') => {
   const valid = mode === 'spike' ? SPIKE_MAPS : MATCH_MAPS;
@@ -890,6 +904,16 @@ wss.on('connection', (ws) => {
         if (!text) return;
         c.lastChatAt = t;
         bcast(r, { t: 'chat', id: c.id, team: c.team, name: cleanName(c.name), text });
+        break;
+      }
+      case 'ping': {
+        if (!r || !c.alive || r.paused || r.phase !== 'live') break;
+        const t = now(); if (t - (c.lastPingAt || 0) < 850) break;
+        const x = Number(m.x), z = Number(m.z), y = Number(m.y);
+        if (!Number.isFinite(x) || !Number.isFinite(z)) break;
+        c.lastPingAt = t;
+        const ping = { t: 'ping', id: c.id, team: c.team, name: cleanName(c.name), x: Math.max(-MAP.halfX + 1, Math.min(MAP.halfX - 1, x)), z: Math.max(-MAP.halfZ + 1, Math.min(MAP.halfZ - 1, z)), y: Number.isFinite(y) ? Math.max(0, Math.min(8, y)) : 0, dur: 4500 };
+        for (const mate of r.players.values()) if (!mate.isBot && mate.team === c.team) send(mate, ping);
         break;
       }
       case 'state':

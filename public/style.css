@@ -32,6 +32,15 @@ input{font:inherit;color:var(--bone);background:#0a1118;border:1.5px solid var(-
 .ma-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ma-fields label{font-size:.65rem}.ma-fields input{width:100%;min-width:0;padding:.45rem;font-size:.85rem}
 .ma-note{color:var(--mute);font-size:.78rem;line-height:1.5}.ma-actions{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:7px}.ma-actions button{font-size:.74rem;padding:.7em .45em}.ma-actions .primary{grid-column:1/-1;background:var(--red);border-color:var(--red);color:#fff}
 .ma-status{min-height:1.2rem;color:var(--t1);font-size:.75rem;line-height:1.4}
+.ma-object{display:flex;flex-direction:column;gap:8px;padding:10px;background:#0b141c;border:1px solid #ffffff20;border-radius:4px}
+.ma-object>header{display:flex;align-items:center;justify-content:space-between}.ma-object>header h3{margin:0}.ma-object>header span{font-size:.64rem;color:var(--mute);letter-spacing:.1em}
+.ma-box-tools,.ma-box-select,.ma-box-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.ma-box-tools button{font-size:.68rem;padding:.55em .25em;color:var(--mute)}.ma-box-tools button.active{background:#1b6f6d;border-color:#35cbbd;color:#fff}
+.ma-box-tools kbd{display:inline-block;margin-left:3px;padding:1px 4px;border:1px solid #ffffff35;border-radius:3px;font-size:.6rem}
+.ma-box-select select,.ma-box-select button,.ma-box-actions button{min-width:0;padding:.5rem .35rem;background:#111c26;color:var(--bone);border:1px solid var(--line);font:inherit;font-size:.68rem}
+.ma-box-select select{grid-column:1/-1;width:100%}.ma-box-select button{font-weight:700}.ma-box-select button:hover,.ma-box-actions button:hover{border-color:#35cbbd}
+.ma-box-fields{grid-template-columns:1fr 1fr}.ma-box-fields label:first-child{grid-column:1/-1}.ma-box-fields input:disabled,.ma-box-fields select:disabled{opacity:.45}.ma-box-fields.disabled{opacity:.68}
+.ma-box-actions{grid-template-columns:1fr 1fr}.ma-object .ma-note{margin:0;font-size:.7rem}
 @media(max-width:800px){.ma-shell{padding:10px}.ma-body{grid-template-columns:1fr;grid-template-rows:minmax(260px,1fr) auto}.ma-side{max-height:42vh}.ma-toolbar{gap:6px}.ma-toolbar label{flex:1}.ma-toolbar select,.ma-toolbar input{min-width:0;width:100%}}
 
 /* oyun */

@@ -182,6 +182,70 @@ function buildMapFromQuarter(name, halfX, halfZ, spawnX, quarter, goals, mirrorZ
   return { name, halfX, halfZ, spawnX, boxes, goals, sites: [[-12, 0], [12, 0]] };
 }
 
+// Büyük, üç rotalı Spike haritası. Ölçek metre cinsindendir; düşük basamaklar
+// mevcut zemin/çarpışma sisteminin üstüne çıkabileceği şekilde kademelendirilir.
+function buildCitadelSpike() {
+  const halfX = 96, halfZ = 68, boxes = [];
+  const box = (x, z, w, d, h, k = 'wall') => boxes.push({ x, z, w, d, h, k });
+  const wall = (x, z, w, d, h = 5.2) => box(x, z, w, d, h, 'wall');
+  const crate = (x, z, w = 3.2, d = 3.2, h = 1.35, k = 'crate') => box(x, z, w, d, h, k);
+  // Harita sınırları.
+  wall(0, -halfZ - .5, halfX * 2 + 2, 1, 7, 'outer'); wall(0, halfZ + .5, halfX * 2 + 2, 1, 7, 'outer');
+  wall(-halfX - .5, 0, 1, halfZ * 2 + 2, 7, 'outer'); wall(halfX + .5, 0, 1, halfZ * 2 + 2, 7, 'outer');
+  // T ve CT doğuş odaları: karşılıklı görüşü kapatan kalın siperler ve yan çıkışlar.
+  wall(-76, 0, 1.5, 25, 5.5); wall(-84, -18, 18, 1.5, 5.5); wall(-84, 18, 18, 1.5, 5.5);
+  wall(76, 0, 1.5, 25, 5.5); wall(84, -18, 18, 1.5, 5.5); wall(84, 18, 18, 1.5, 5.5);
+  // Batı yaklaşımı: merkez, kuzey ve güney rotaları arasında güvenli ayrım.
+  wall(-59, -31, 1.4, 28); wall(-59, 31, 1.4, 28);
+  wall(-42, -17, 20, 1.3); wall(-42, 17, 20, 1.3);
+  crate(-67, -28, 5, 3, 2.6, 'stack'); crate(-67, 28, 5, 3, 2.6, 'stack');
+  crate(-48, -48, 5, 4, 1.35); crate(-48, 48, 5, 4, 1.35);
+  wall(-36, -48, 18, 1.2, 4.4); wall(-36, 48, 18, 1.2, 4.4);
+  // Orta kavşak: kırık görüş hatları, kısa siperler ve birden fazla dönüş.
+  wall(-28, -4, 1.3, 24, 4.8); wall(-12, 7, 18, 1.3, 4.8);
+  wall(-22, 37, 1.3, 20, 4.4); wall(-5, 49, 19, 1.3, 4.4);
+  wall(-22, -37, 1.3, 20, 4.4); wall(-5, -49, 19, 1.3, 4.4);
+  crate(-8, -10, 4, 4, 2.7, 'stack'); crate(3, 10, 4, 4, 2.7, 'stack');
+  crate(1, -27, 4.5, 3.5, 1.4); crate(1, 27, 4.5, 3.5, 1.4);
+  box(-4, 0, 2.4, 2.4, 5.6, 'pillar'); box(13, 0, 2.4, 2.4, 5.6, 'pillar');
+  wall(18, -22, 18, 1.3, 4.2); wall(18, 22, 18, 1.3, 4.2);
+  // A/B alanları ve yaklaşma koridorları. Kenar siperleri açık girişler bırakır.
+  wall(27, -55, 20, 1.3, 4.5); wall(27, -25, 20, 1.3, 4.5);
+  wall(27, 25, 20, 1.3, 4.5); wall(27, 55, 20, 1.3, 4.5);
+  wall(17, -40, 1.3, 14, 4.2); wall(17, 40, 1.3, 14, 4.2);
+  crate(39, -40, 4.6, 4.6, 1.5, 'stack'); crate(39, 40, 4.6, 4.6, 1.5, 'stack');
+  crate(52, -31, 3.6, 3.6, 2.8); crate(52, 31, 3.6, 3.6, 2.8);
+  crate(28, -47, 3, 3, 1.35, 'barrel'); crate(28, 47, 3, 3, 1.35, 'barrel');
+  box(43, -40, 2, 2, 6, 'pillar'); box(43, 40, 2, 2, 6, 'pillar');
+  // Güney/kuzey yan sarmaları ve flank cepleri.
+  wall(55, -12, 1.3, 18, 4.5); wall(55, 12, 1.3, 18, 4.5);
+  crate(65, -27, 5, 4, 1.4); crate(65, 27, 5, 4, 1.4);
+  wall(69, -45, 1.3, 18, 4.6); wall(69, 45, 1.3, 18, 4.6);
+  crate(74, -29, 3.4, 3.4, 2.4, 'stack'); crate(74, 29, 3.4, 3.4, 2.4, 'stack');
+  // Tırmanılabilir teraslar: her basamakta yükseklik yalnızca 0.34 m artar.
+  for (let i = 0; i < 7; i++) {
+    box(48, -56 + i * 2.2, 5.5, 2.25, .34 * (i + 1), 'crate');
+    box(48, 56 - i * 2.2, 5.5, 2.25, .34 * (i + 1), 'crate');
+  }
+  box(57, -56, 9, 7, 2.45, 'container'); box(57, 56, 9, 7, 2.45, 'container');
+  box(64, -56, 4, 8, .55, 'container'); box(64, 56, 4, 8, .55, 'container');
+  // A ve B çevresinde farklı yüksekliklerde görüş/kurulum siperleri.
+  crate(35, -34, 6, 2.6, .75, 'container'); crate(35, -46, 6, 2.6, .75, 'container');
+  crate(35, 34, 6, 2.6, .75, 'container'); crate(35, 46, 6, 2.6, .75, 'container');
+  box(48, -40, 8, 2, .6, 'container'); box(48, 40, 8, 2, .6, 'container');
+  // Köşelerde küçük bina/kasa kümeleri: pusma ve yeniden pozisyon alma alanları.
+  box(-38, -57, 11, 8, 4.8, 'house'); box(-38, 57, 11, 8, 4.8, 'house');
+  box(5, -58, 8, 6, 4.1, 'house'); box(5, 58, 8, 6, 4.1, 'house');
+  crate(-29, -54, 3, 3, 1.4, 'barrel'); crate(-29, 54, 3, 3, 1.4, 'barrel');
+  crate(8, -37, 3, 3, 1.3); crate(8, 37, 3, 3, 1.3);
+  return {
+    name: 'Kızıl Kale · Spike', halfX, halfZ, spawnX: 82,
+    spawns: [[-84, 0, -Math.PI / 2], [84, 0, Math.PI / 2]], spawnY: .18,
+    boxes, sites: [[39, -40], [39, 40]],
+    goals: [[-68, -28], [-48, -48], [-28, -4], [-4, 0], [18, -22], [39, -40], [18, 22], [39, 40]],
+  };
+}
+
 export const MAP_DEFS = {
   haven: buildMapFromQuarter('Haven C-Site', 44, 28, 39, [
     [-31, -15, 1, 18, 5, 'wall'],
@@ -280,6 +344,7 @@ export const MAP_DEFS = {
     [-20, -1, 2.4, 2.4, 4.3, 'pillar'],
     [-28, -3, 3, 3, 1.4, 'barrel'],
   ], [[-34, -23], [34, -23], [-34, 23], [34, 23], [-12, -13], [12, -13], [-12, 13], [12, 13], [-2, 0], [2, 0], [-22, 0], [22, 0]], false),
+  citadel_spike: buildCitadelSpike(),
 };
 
 // Lotus: orman tapınağı; sütunlu avlu, taşlar, tapınak odası
@@ -403,7 +468,8 @@ export const MAP = {
   spawn(team, i, n = 1) {
     if (this.spawns?.[team]) {
       const [sx, sz, yaw] = this.spawns[team];
-      return { x: sx + (i - (n - 1) / 2) * 3.4, y: this.spawnY ?? 0.18, z: sz, yaw };
+      const side = (i - (n - 1) / 2) * 3.4;
+      return { x: sx + Math.cos(yaw) * side, y: this.spawnY ?? 0.18, z: sz - Math.sin(yaw) * side, yaw };
     }
     const sx = this.spawnX;
     if (this.spawnAxis === 'z') return { x: (i - (n - 1) / 2) * 3.4, y: this.spawnY ?? 0.18, z: team === 0 ? -sx : sx, yaw: team === 0 ? Math.PI : 0 };
@@ -423,8 +489,8 @@ export const MAP = {
     this.halfZ = def.halfZ;
     this.spawnX = def.spawnX;
     this.spawnAxis = def.spawnAxis || 'x';
-    this.spawns = null;
-    this.spawnY = 0.18;
+    this.spawns = def.spawns ? def.spawns.map((p) => [...p]) : null;
+    this.spawnY = def.spawnY ?? 0.18;
     this.playerScale = 1;
     this.boxes = def.boxes.map((b) => ({ ...b }));
     this.goals = def.goals.slice();

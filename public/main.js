@@ -61,6 +61,19 @@ function onChat(m) {
   list.scrollTop = list.scrollHeight;
   if (!chatOpen()) { chatUnread++; $('#chatUnread').textContent = chatUnread > 9 ? '9+' : chatUnread; $('#chatUnread').classList.remove('hidden'); }
 }
+function onTeamPing(m) {
+  if (![m.x, m.z].every((v) => Number.isFinite(Number(v)))) return;
+  const color = TEAMS[m.team]?.color || '#ffd24a', x = Number(m.x), z = Number(m.z), y = Math.max(Number(m.y) || 0, groundAt(x, z, (Number(m.y) || 0) + .45));
+  const mesh = new THREE.Group();
+  const dot = new THREE.Mesh(new THREE.CircleGeometry(.78, 32), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .2, depthWrite: false, side: THREE.DoubleSide })); dot.rotation.x = -Math.PI / 2; dot.position.y = .045; mesh.add(dot);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(.92, 1.12, 40), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .95, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .06; mesh.add(ring);
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(.045, .09, 2.8, 8), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .78, depthWrite: false })); beam.position.y = 1.42; mesh.add(beam);
+  const cap = new THREE.Mesh(new THREE.OctahedronGeometry(.25), new THREE.MeshBasicMaterial({ color, depthWrite: false })); cap.position.y = 2.9; mesh.add(cap);
+  const c = document.createElement('canvas'); c.width = 256; c.height = 64; const ctx = c.getContext('2d'); ctx.fillStyle = '#09131ddd'; ctx.fillRect(3, 4, 250, 56); ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.strokeRect(3, 4, 250, 56); ctx.fillStyle = '#f4f0e8'; ctx.font = 'bold 25px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(`PING · ${String(m.name || 'TAKIM').slice(0, 12)}`, 128, 33);
+  const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthTest: false })); label.scale.set(4, 1, 1); label.position.y = 3.7; mesh.add(label);
+  mesh.position.set(x, y, z); mesh.userData.pingRing = ring; mesh.userData.pingDot = dot; mesh.userData.pingExpires = performance.now() + clamp(Number(m.dur) || 4500, 1000, 6000);
+  dyn.add(mesh); teamPings.push({ mesh, x, z, color: TEAMS[m.team]?.color || '#ffd24a', expires: mesh.userData.pingExpires });
+}
 $('#chatToggle').addEventListener('click', () => chatOpen() ? closeChat({ resume: true }) : openChat());
 $('#chatClose').addEventListener('click', () => closeChat({ resume: true }));
 $('#chatForm').addEventListener('submit', (e) => {
@@ -104,6 +117,7 @@ function handle(m) {
     case 'left': if (inGame) leaveGame(); room = null; clearChat(); closeChat(); showScreen('menu'); break;
     case 'room': onRoom(m); break;
     case 'chat': onChat(m); break;
+    case 'ping': onTeamPing(m); break;
     case 'phase': onPhase(m); break;
     case 'objective':
       if (m.event === 'planted') banner('BOMBA KURULDU', `Alan ${String.fromCharCode(65 + (m.site || 0))} · 45 saniye`, 3200);
@@ -261,7 +275,7 @@ paintQueue();
 let mapPick = localStorage.getItem('zl_map'); if (!MAP_LIST.includes(mapPick) || mapPick === 'range') mapPick = 'random';
 function renderMapSel() {
   const s = $('#mapSel');
-  const available = (gameMode === 'spike' ? MAP_SPIKE_LIST : MAP_LIST).filter((id) => id !== 'range');
+  const available = (gameMode === 'spike' ? MAP_SPIKE_LIST : MAP_LIST).filter((id) => id !== 'range' && (gameMode === 'spike' || id !== 'citadel_spike'));
   if (!available.includes(mapPick)) { mapPick = 'random'; localStorage.setItem('zl_map', mapPick); }
   s.replaceChildren(new Option('Rastgele', 'random'));
   for (const id of available) s.append(new Option(MAP_NAMES[id], id));
@@ -698,6 +712,7 @@ const THEMES = {
   lotus:  { sky: ['#5b8a6b', '#a6c49d', '#e0e8cc', '#9db08a'], fog: '#9fb394', sun: '#fff0c8', sunI: 1.3, hemi: 1.0, floor: '#8f9877', line: '#6e765a', tiles: 3, ts: 1.4, wall: '#9b8f78', house: '#857a64', outer: '#7d735f', post: '#4a4232', accent: '#e0a52b', cap: '#3e3a2c', roof: '#5c6b3a', win: '#e0a52b', plate: '#7f8466', site: 'C', mountain: '#4f7a55', outside: '#4f6e45', tree: 'jungle', grass: true, flags: false, rock: '#7c7b6c', top: 'gold' },
   icebox: { sky: ['#7ea6c8', '#c3d7e7', '#eef4f8', '#d9e4ec'], fog: '#dbe6ee', sun: '#f4f8ff', sunI: 1.5, hemi: 1.15, floor: '#e9eff3', line: '#c5d2db', tiles: 2, ts: 3, wall: '#cfdbe6', house: '#b8c8d8', outer: '#aebfcf', post: '#5a6d80', accent: '#ff8a1a', cap: '#4a5a6a', roof: '#5a6d80', win: '#ffd28a', plate: '#c9d4dc', site: 'B', mountain: '#eef3f7', outside: '#eef3f7', tree: 'snow', grass: false, flags: false, rock: '#aab6bf', top: 'bush', flatRoof: true },
   dust2:  { sky: ['#b46b38', '#e2b978', '#f2dfb8', '#c8a77b'], fog: '#d6bb91', sun: '#ffe5b2', sunI: 1.55, hemi: 1.0, floor: '#cbb68c', line: '#b19a70', tiles: 2, ts: 1.8, wall: '#c7a77b', house: '#b9946c', outer: '#b28f66', post: '#69513b', accent: '#d9a759', cap: '#594331', roof: '#8a6045', win: '#f4d19a', plate: '#b89b70', site: 'A', mountain: '#a98965', outside: '#b69970', tree: 'none', grass: false, flags: false, rock: '#a58b69', top: 'bush', flatRoof: true },
+  citadel_spike: { sky: ['#263b4a', '#758c8b', '#c8b99b', '#596b6c'], fog: '#84908b', sun: '#ffe5bc', sunI: 1.35, hemi: 1.0, floor: '#77796e', line: '#62675e', tiles: 7, ts: 1.4, wall: '#8c8b7c', house: '#8b755f', outer: '#49555a', post: '#55483d', accent: '#e1a544', cap: '#3e4749', roof: '#77634d', win: '#f2c47c', plate: '#6f7167', site: 'A', mountain: '#566b6b', outside: '#5d7168', tree: 'none', grass: false, flags: false, rock: '#6b706a', top: 'bush', flatRoof: true },
   range:  { sky: ['#182735', '#526578', '#84929a', '#657078'], fog: '#6d7881', sun: '#fff0cf', sunI: 1.25, hemi: 1.0, floor: '#343d43', line: '#58636a', tiles: 3, ts: 1.2, wall: '#68747a', house: '#68747a', outer: '#26323a', post: '#18232b', accent: '#ffd24a', cap: '#27343b', roof: '#4c5960', win: '#ffd24a', plate: '#303a40', site: 'R', mountain: '#596770', outside: '#3e484e', tree: 'none', grass: false, flags: false, rock: '#647078', top: 'bush', flatRoof: true },
 };
 const theme = () => (!MAP.custom && THEMES[MAP.id]) || THEMES.haven;
@@ -822,7 +837,7 @@ function addProceduralMap() {
         const site = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshBasicMaterial({ map: texSite(String.fromCharCode(65 + i), T.accent), transparent: true, depthWrite: false, opacity: .82 }));
         site.rotation.x = -Math.PI / 2; site.position.set(x, 0.075, z); site.renderOrder = 2; world.add(site);
       }
-    } else {
+    } else if (MAP.id !== 'citadel_spike') {
       // Merkezdeki C-Site işareti
       const site = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), new THREE.MeshBasicMaterial({ map: texSite(T.site, T.accent), transparent: true, depthWrite: false, opacity: .9 }));
       site.rotation.x = -Math.PI / 2; site.position.set(0, 0.075, 0); site.renderOrder = 2; world.add(site);
@@ -1018,7 +1033,7 @@ let spikeState = null, spikeEndAt = 0, spikeMarker = null;
 let rmbHeld = false;
 let paused = false, pausedRemain = 0, locked = false, lockPending = false, buyOpen = false, firing = false, fireQueued = false, heavyQueued = false, spectateIdx = 0;
 const keys = {};
-let smokes = [], tracers = [], walls = [], fires = [], decals = [], parts = [];
+let smokes = [], tracers = [], walls = [], fires = [], decals = [], parts = [], teamPings = [];
 const dropObjs = new Map();
 const deployableObjs = new Map();
 
@@ -1057,7 +1072,7 @@ function leaveGame() {
   inGame = false; if (document.pointerLockElement) document.exitPointerLock();
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); clearPlayers(); clearFx(); setSpikeState(null); onDrops([]); closeSettings(); $('#matchEnd').classList.add('hidden'); $('#deathCard').classList.add('hidden'); buyOpen = false; setPaused(false); $('#buy').classList.add('hidden'); phase = 'lobby';
 }
-function clearFx() { for (const s of smokes) dyn.remove(s.mesh); smokes = []; while (walls.length) removeWall(walls.length - 1); while (fires.length) removeFire(fires.length - 1); for (const d of decals) dyn.remove(d); decals = []; for (const q of parts) dyn.remove(q.m); parts = []; for (const item of deployableObjs.values()) dyn.remove(item); deployableObjs.clear(); if (spikeMarker) { dyn.remove(spikeMarker); spikeMarker = null; } }
+function clearFx() { for (const s of smokes) dyn.remove(s.mesh); smokes = []; while (walls.length) removeWall(walls.length - 1); while (fires.length) removeFire(fires.length - 1); for (const d of decals) dyn.remove(d); decals = []; for (const q of parts) dyn.remove(q.m); parts = []; for (const p of teamPings) dyn.remove(p.mesh); teamPings = []; for (const item of deployableObjs.values()) dyn.remove(item); deployableObjs.clear(); if (spikeMarker) { dyn.remove(spikeMarker); spikeMarker = null; } }
 function setSpikeState(obj) {
   if (obj?.planted && !spikeState?.planted) spikeEndAt = performance.now() + obj.remain;
   else if (!obj?.planted) spikeEndAt = 0;
@@ -1372,7 +1387,18 @@ addEventListener('blur', () => { if (keys[binds.objective]) send({ t: 'objective
 // Mouse mousedown her düğmede gelir; pointerdown ikinci düğme basışını (RMB tutuluyken LMB) atlayabilir.
 addEventListener('mousedown', (e) => {
   if (!inGame || buyOpen) return;
-  if (e.target instanceof Element && e.target.closest('#buy, #setOverlay, #board, #matchEnd, #deathCard, #ingameSet, #quitBtn')) return;
+  if (e.target instanceof Element && e.target.closest('#buy, #setOverlay, #board, #matchEnd, #deathCard, #ingameSet, #quitBtn, #chatPanel')) return;
+  if (e.button === 1) {
+    if (!me.alive || phase !== 'live') return;
+    e.preventDefault(); locked = document.pointerLockElement === canvas; if (!locked) lockGame();
+    const origin = camera.getWorldPosition(new THREE.Vector3()), direction = camera.getWorldDirection(new THREE.Vector3());
+    const aimRay = new THREE.Raycaster(origin, direction, .05, 100), hit = aimRay.intersectObject(world, true)[0];
+    let x, z, y = 0;
+    if (hit) { x = hit.point.x; z = hit.point.z; y = Math.max(0, hit.point.y); }
+    else { const length = Math.hypot(direction.x, direction.z) || 1; x = me.x + direction.x / length * 55; z = me.z + direction.z / length * 55; }
+    send({ t: 'ping', x: clamp(x, -MAP.halfX + 1, MAP.halfX - 1), z: clamp(z, -MAP.halfZ + 1, MAP.halfZ - 1), y });
+    return;
+  }
   if (e.button === 0) {
     sound.unlock();
     locked = document.pointerLockElement === canvas;
@@ -1390,6 +1416,7 @@ addEventListener('mousedown', (e) => {
   rmbHeld = true;
   if (!me.reloading) { me.ads = true; va.inspect = 0; }
 }, true);
+addEventListener('auxclick', (e) => { if (e.button === 1 && inGame) e.preventDefault(); }, true);
 // slot değiştirme: 1 ana silah, 2 tabanca, 3 karambit · fare tekerleği ile sırayla
 let lastWeaponId = null;
 function switchSlot(n) {
@@ -1685,6 +1712,7 @@ function drawMinimap(dt) {
   for (const sm of smokes) { const [x, z] = W(sm.mesh.position.x, sm.mesh.position.z); c.fillStyle = '#cfd5dbaa'; c.beginPath(); c.arc(x, z, 4 * S, 0, 7); c.fill(); }
   for (const f of fires) { const [x, z] = W(f.x, f.z); c.fillStyle = '#ff7a1a99'; c.beginPath(); c.arc(x, z, f.rad * S, 0, 7); c.fill(); }
   for (const d of dropObjs.values()) { const [x, z] = W(d.x, d.z); c.fillStyle = '#ffe08a'; c.fillRect(x - 2, z - 2, 4, 4); }
+  for (const p of teamPings) { const [x, z] = W(p.x, p.z); c.fillStyle = p.color; c.beginPath(); c.arc(x, z, 4.5 * S, 0, Math.PI * 2); c.fill(); c.strokeStyle = '#ffffff'; c.lineWidth = 1.5; c.stroke(); }
   for (const p of players.values()) {
     if (!p.init || !p.alive) continue;
     const mate = p.team === mine; if (!mate && !(p.revealUntil > t) && !(p.seenUntil > t)) continue;
@@ -1698,6 +1726,11 @@ function drawMinimap(dt) {
 }
 function updateWorldFx(dt) {
   const t = performance.now(), mine = TEAMS_MY();
+  for (let i = teamPings.length - 1; i >= 0; i--) {
+    const p = teamPings[i], remain = p.expires - t;
+    if (remain <= 0) { dyn.remove(p.mesh); for (const o of p.mesh.children) { o.geometry?.dispose?.(); if (Array.isArray(o.material)) o.material.forEach((m) => m.dispose?.()); else { o.material?.map?.dispose?.(); o.material?.dispose?.(); } } teamPings.splice(i, 1); continue; }
+    const pulse = 1 + .12 * Math.sin(t / 120); p.mesh.userData.pingRing.scale.setScalar(pulse); p.mesh.userData.pingRing.material.opacity = .4 + .55 * remain / 4500; p.mesh.userData.pingDot.material.opacity = .08 + .16 * remain / 4500;
+  }
   if (spikeMarker) { spikeMarker.userData.gem.rotation.y += dt * 1.4; spikeMarker.children[2].material.opacity = 0.55 + 0.3 * Math.sin(t / 180); }
   for (let i = walls.length - 1; i >= 0; i--) {
     const w = walls[i]; w.t -= dt; const k = Math.min(1, w.mesh.scale.y + dt * 6); w.mesh.scale.y = k; w.mesh.position.y = w.box.h / 2 * k;

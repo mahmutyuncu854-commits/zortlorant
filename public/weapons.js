@@ -215,8 +215,8 @@ function fromGLB(id, spec, modelId = id) {
   oriented.updateMatrixWorld(true);
   let b = new THREE.Box3().setFromObject(oriented);
   const wrap = new THREE.Group(); wrap.add(oriented); b = new THREE.Box3().setFromObject(wrap);
-  // İndirilen FPS modelleri elde fazla büyük görünüyordu; görünüm silahını oyun ölçeğinde küçült.
-  const size = b.getSize(new THREE.Vector3()), k = (spec.len * 0.72) / Math.max(size.z, 0.001), c = b.getCenter(new THREE.Vector3());
+  // İthal FPS silahlarını önceki eldeki ölçeğine döndür.
+  const size = b.getSize(new THREE.Vector3()), k = spec.len / Math.max(size.z, 0.001), c = b.getCenter(new THREE.Vector3());
   wrap.scale.setScalar(k); wrap.position.set(-c.x * k, -c.y * k, -c.z * k); g.add(wrap);
   // CS AK modelinin içinde silahın elde tutulacağı referans düğümü var.
   // Bunu kullanmak, gövdeye göre tahmin edilen eski GRIP noktasının modeli

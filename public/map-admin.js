@@ -12,13 +12,22 @@ export function createMapAdmin({ mapIds, mapNames, mapDefinitions = {}, renderer
     <div class="ma-shell">
       <header class="ma-head"><div><small>YÖNETİCİ ARAÇLARI</small><h2>HARİTA DÜZENLEYİCİ</h2></div><button data-act="close" aria-label="Kapat">×</button></header>
        <div class="ma-toolbar"><label>HARİTA<select data-field="map"></select></label><label>HARİTA BOYUTU<input data-field="fit" type="number" min="20" max="300" step="1"></label><label>OYUNCU MODELİ<input data-field="playerScale" type="number" min="0.55" max="1.5" step="0.05"></label><label>DOĞUŞ YÜKSEKLİĞİ<input data-field="spawnY" type="number" min="0" max="8" step="0.05"></label><label>İŞARET TÜRÜ<select data-field="marker"><option value="t">T doğuş</option><option value="ct">CT doğuş</option><option value="a">A bombası</option><option value="b">B bombası</option></select></label><button data-act="freecam">SERBEST KAMERA: AÇIK</button></div>
-      <div class="ma-body"><div class="ma-stage"><div class="ma-help">WASD: gezin · Q/E: aşağı/yukarı · sağ fareyi sürükle: bak · tıkla: seçili işareti koy · tekerlek: hız</div></div>
+      <div class="ma-body"><div class="ma-stage"><div class="ma-help">WASD: gezin · Q/E: aşağı/yukarı · sağ fareyi sürükle: bak · kutuyu sol fareyle taşı · tekerlek: kamera hızı</div></div>
         <aside class="ma-side"><h3>YERLEŞİM</h3><div class="ma-fields">
           <label>T doğuş X<input data-coord="t" data-axis="0" type="number" step="0.25"></label><label>T doğuş Z<input data-coord="t" data-axis="1" type="number" step="0.25"></label><label>T bakış açısı<input data-coord="t" data-axis="2" type="number" step="0.05"></label>
           <label>CT doğuş X<input data-coord="ct" data-axis="0" type="number" step="0.25"></label><label>CT doğuş Z<input data-coord="ct" data-axis="1" type="number" step="0.25"></label><label>CT bakış açısı<input data-coord="ct" data-axis="2" type="number" step="0.05"></label>
           <label>A bombası X<input data-coord="a" data-axis="0" type="number" step="0.25"></label><label>A bombası Z<input data-coord="a" data-axis="1" type="number" step="0.25"></label>
           <label>B bombası X<input data-coord="b" data-axis="0" type="number" step="0.25"></label><label>B bombası Z<input data-coord="b" data-axis="1" type="number" step="0.25"></label>
-        </div><p class="ma-note">İşaretleri sürükleyebilir veya türünü seçip haritaya tıklayarak yerleştirebilirsin. Kaydettiğin harita ölçüsü ve doğuş/bomba noktaları bu tarayıcıdan açılan yeni maçlarda kullanılır. Düzeni saklamak için JSON indir.</p><div class="ma-actions"><button data-act="save">KAYDET</button><button data-act="export">JSON İNDİR</button><button data-act="reset">SIFIRLA</button><button class="primary" data-act="start">OYUNA DÖN</button></div><div class="ma-status" aria-live="polite"></div></aside>
+        </div><p class="ma-note">Doğuş ve bomba işaretlerini sürükle; seçili işaret türünü haritaya tıklayarak da koyabilirsin.</p>
+          <section class="ma-object"><header><h3>SAHNE NESNELERİ</h3><span data-box-count>0 OBJE</span></header>
+            <div class="ma-box-tools" role="toolbar" aria-label="Nesne araçları"><button type="button" data-tool="move" class="active" title="Taşı (W)">TAŞI <kbd>W</kbd></button><button type="button" data-tool="scale" title="Boyutlandır (R)">ÖLÇEK <kbd>R</kbd></button><button type="button" data-tool="rotate" title="90 derece döndür (E)">DÖNDÜR <kbd>E</kbd></button></div>
+            <div class="ma-box-select"><select data-field="boxSelect" aria-label="Harita nesnesi"></select><button type="button" data-act="addBox">+ NESNE</button><button type="button" data-act="deleteBox">SİL</button></div>
+            <div class="ma-fields ma-box-fields" data-box-fields><label>TÜR<select data-box="k"><option value="crate">Kasa</option><option value="stack">Kasa yığını</option><option value="wall">Duvar</option><option value="house">Bina</option><option value="container">Konteyner</option><option value="pillar">Sütun</option><option value="barrel">Varil</option><option value="rock">Kaya</option><option value="planter">Saksı</option><option value="outer">Sınır duvarı</option></select></label>
+              <label>X<input data-box="x" type="number" step="0.25"></label><label>Z<input data-box="z" type="number" step="0.25"></label><label>GENİŞLİK<input data-box="w" type="number" min="0.3" step="0.25"></label><label>DERİNLİK<input data-box="d" type="number" min="0.3" step="0.25"></label><label>YÜKSEKLİK<input data-box="h" type="number" min="0.25" step="0.25"></label>
+            </div><div class="ma-box-actions"><button type="button" data-act="rotateLeft">↶ 90°</button><button type="button" data-act="rotateRight">90° ↷</button></div>
+            <p class="ma-note">Nesneyi seçip sahnede sürükle. Ölçek aracında sürüklemek eni, boyu ve yüksekliği değiştirir. Yükseklik ve ölçüleri sağdaki alanlardan hassas girebilirsin.</p>
+          </section>
+          <div class="ma-actions"><button data-act="save">KAYDET</button><button data-act="export">JSON İNDİR</button><button data-act="reset">SIFIRLA</button><button class="primary" data-act="start">OYUNA DÖN</button></div><div class="ma-status" aria-live="polite"></div></aside>
       </div>
     </div>`;
   document.body.append(root);
@@ -39,7 +48,7 @@ export function createMapAdmin({ mapIds, mapNames, mapDefinitions = {}, renderer
   const mapSelect = $('[data-field="map"]');
   for (const id of mapIds) mapSelect.add(new Option(mapNames[id] || id, id));
   let data = null, opened = false, freecam = true, yaw = 0, pitch = -0.55, speed = 18, frame = 0, last = 0, previewModel = null, previewBounds = null, boundsRoot = null, boundsHelper = null, builtWorld = null;
-  let drag = false, draggingMarker = null, previous = [0, 0], downPos = [0, 0];
+  let drag = false, draggingMarker = null, draggingBox = -1, boxDragMode = 'move', boxDragAnchor = null, boxDragStart = null, boxClicked = false, markerClicked = false, selectedBox = -1, toolMode = 'move', previous = [0, 0], downPos = [0, 0];
   const keys = new Set();
   const markerMeshes = {};
 
@@ -94,11 +103,67 @@ export function createMapAdmin({ mapIds, mapNames, mapDefinitions = {}, renderer
     if (builtWorld) { world.remove(builtWorld); builtWorld.traverse((m) => { m.geometry?.dispose?.(); if (Array.isArray(m.material)) m.material.forEach((x) => x.dispose?.()); else m.material?.dispose?.(); }); }
     builtWorld = new THREE.Group();
     const colors = { wall: '#817f78', house: '#a98966', crate: '#b37e45', stack: '#aa7045', pillar: '#8b8990', barrel: '#9a5a45', tree: '#517a56', planter: '#628b69', container: '#477e8e', outer: '#37444b', rock: '#6b7477' };
-    for (const b of data.boxes || []) {
+    for (const [index, b] of (data.boxes || []).entries()) {
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h, b.d), new THREE.MeshStandardMaterial({ color: colors[b.k] || '#938a71', roughness: .88 }));
-      mesh.position.set(b.x, b.h / 2, b.z); builtWorld.add(mesh);
+      mesh.position.set(b.x, b.h / 2, b.z); mesh.userData.boxIndex = index; mesh.userData.baseSize = { w: b.w, h: b.h, d: b.d }; builtWorld.add(mesh);
     }
     world.add(builtWorld);
+    syncBoxList(); highlightSelectedBox();
+  }
+  const BOX_TYPES = { wall: 'Duvar', house: 'Bina', crate: 'Kasa', stack: 'Kasa yığını', pillar: 'Sütun', barrel: 'Varil', tree: 'Ağaç', planter: 'Saksı', container: 'Konteyner', outer: 'Sınır duvarı', rock: 'Kaya' };
+  function syncBoxList() {
+    const select = $('[data-field="boxSelect"]'), boxes = data?.boxes || [];
+    select.replaceChildren(...boxes.map((b, i) => new Option(`${String(i + 1).padStart(2, '0')} · ${BOX_TYPES[b.k] || b.k} · ${Number(b.x).toFixed(0)}, ${Number(b.z).toFixed(0)}`, String(i))));
+    if (selectedBox >= boxes.length) selectedBox = boxes.length - 1;
+    select.value = selectedBox >= 0 ? String(selectedBox) : '';
+    $('[data-box-count]').textContent = `${boxes.length} OBJE`;
+    syncBoxFields();
+  }
+  function syncBoxFields() {
+    const b = data?.boxes?.[selectedBox], editor = $('[data-box-fields]');
+    for (const input of root.querySelectorAll('[data-box]')) { input.disabled = !b; if (b) input.value = input.dataset.box === 'k' ? b.k : Number(b[input.dataset.box] || 0); }
+    if (editor) editor.classList.toggle('disabled', !b);
+    const select = $('[data-field="boxSelect"]'); if (select) select.value = b ? String(selectedBox) : '';
+  }
+  function highlightSelectedBox() {
+    if (!builtWorld) return;
+    for (const mesh of builtWorld.children) {
+      const active = mesh.userData.boxIndex === selectedBox;
+      mesh.material.emissive?.set(active ? '#19cbbb' : '#000000');
+      mesh.material.emissiveIntensity = active ? .48 : 0;
+    }
+  }
+  function selectBox(index) {
+    selectedBox = index >= 0 && index < (data?.boxes?.length || 0) ? index : -1;
+    syncBoxFields(); highlightSelectedBox();
+  }
+  function updateBoxMesh(index) {
+    const b = data?.boxes?.[index], mesh = builtWorld?.children.find((item) => item.userData.boxIndex === index);
+    if (!b || !mesh) return;
+    const base = mesh.userData.baseSize;
+    mesh.position.set(b.x, b.h / 2, b.z); mesh.scale.set(b.w / base.w, b.h / base.h, b.d / base.d);
+  }
+  function setTool(mode) {
+    toolMode = mode;
+    root.querySelectorAll('[data-tool]').forEach((button) => button.classList.toggle('active', button.dataset.tool === mode));
+    status.textContent = mode === 'move' ? 'Taşıma aracı: seçili nesneyi sahnede sürükle.' : mode === 'scale' ? 'Ölçek aracı: nesneyi sahnede sürükleyerek boyutlandır.' : 'Döndürme aracı: seçili nesneyi 90° adımlarla çevir.';
+  }
+  function rotateSelectedBox() {
+    const b = data?.boxes?.[selectedBox]; if (!b) return;
+    [b.w, b.d] = [b.d, b.w]; updateBoxMesh(selectedBox); syncBoxList(); selectBox(selectedBox);
+  }
+  function applyBoxFields() {
+    const b = data?.boxes?.[selectedBox]; if (!b) return; const previousKind = b.k;
+    for (const input of root.querySelectorAll('[data-box]')) {
+      const key = input.dataset.box; if (key === 'k') b.k = input.value;
+      else if (input.value.trim() && Number.isFinite(Number(input.value))) {
+        const n = Number(input.value);
+        b[key] = key === 'w' ? clamp(n, .3, data.halfX * 2 + 20) : key === 'd' ? clamp(n, .3, data.halfZ * 2 + 20) : key === 'h' ? clamp(n, .25, 20) : key === 'x' ? clamp(n, -data.halfX - 20, data.halfX + 20) : clamp(n, -data.halfZ - 20, data.halfZ + 20);
+      }
+    }
+    if (b.k !== previousKind) drawBuiltInMap(); else updateBoxMesh(selectedBox);
+    const select = $('[data-field="boxSelect"]'), option = select.options[selectedBox];
+    if (option) option.textContent = `${String(selectedBox + 1).padStart(2, '0')} · ${BOX_TYPES[b.k] || b.k} · ${Number(b.x).toFixed(0)}, ${Number(b.z).toFixed(0)}`;
   }
   function addBounds() {
     if (boundsRoot) { world.remove(boundsRoot); boundsRoot.geometry?.dispose?.(); boundsRoot.material?.dispose?.(); boundsRoot = null; }
@@ -114,7 +179,7 @@ export function createMapAdmin({ mapIds, mapNames, mapDefinitions = {}, renderer
     previewModel.position.set(-previewBounds.center.x * scale, -previewBounds.min.y * scale + num(data.yOffset), -previewBounds.center.z * scale);
   }
   async function loadMap(id) {
-    data = defaultData(id, await mapConfig(id)); previewModel = null; previewBounds = null;
+    data = defaultData(id, await mapConfig(id)); selectedBox = -1; previewModel = null; previewBounds = null;
     mapSelect.value = id; syncFields(); renderMarkers(); clearWorld(); addBounds();
     drawBuiltInMap();
     if (id === 'minecraft_dm') {
@@ -177,23 +242,58 @@ export function createMapAdmin({ mapIds, mapNames, mapDefinitions = {}, renderer
   root.querySelector('[data-act="export"]').onclick = exportConfig;
   root.querySelector('[data-act="reset"]').onclick = () => { localStorage.removeItem(STORAGE + data.id); loadMap(data.id); };
   root.querySelector('[data-act="freecam"]').onclick = (e) => { freecam = !freecam; e.currentTarget.textContent = `SERBEST KAMERA: ${freecam ? 'AÇIK' : 'KAPALI'}`; };
+  root.querySelectorAll('[data-tool]').forEach((button) => button.onclick = () => setTool(button.dataset.tool));
+  $('[data-field="boxSelect"]').onchange = (e) => selectBox(Number(e.currentTarget.value));
+  root.querySelectorAll('[data-box]').forEach((input) => { if (input.tagName === 'SELECT') input.onchange = applyBoxFields; else input.oninput = applyBoxFields; });
+  root.querySelector('[data-act="addBox"]').onclick = () => {
+    setRayFromEvent({ offsetX: canvas.clientWidth / 2, offsetY: canvas.clientHeight / 2 });
+    const p = floorHit(), hx = p?.x ?? 0, hz = p?.z ?? 0;
+    data.boxes.push({ x: clamp(hx, -data.halfX + 3, data.halfX - 3), z: clamp(hz, -data.halfZ + 3, data.halfZ - 3), w: 4, d: 4, h: 1.5, k: 'crate' });
+    selectedBox = data.boxes.length - 1; drawBuiltInMap(); status.textContent = 'Yeni kasa eklendi. Sahneye sürükleyebilir veya ölçülerini girebilirsin.';
+  };
+  root.querySelector('[data-act="deleteBox"]').onclick = () => {
+    if (selectedBox < 0) return;
+    data.boxes.splice(selectedBox, 1); selectedBox = Math.min(selectedBox, data.boxes.length - 1); drawBuiltInMap(); status.textContent = 'Seçili nesne silindi.';
+  };
+  root.querySelector('[data-act="rotateLeft"]').onclick = rotateSelectedBox;
+  root.querySelector('[data-act="rotateRight"]').onclick = rotateSelectedBox;
   mapSelect.onchange = () => loadMap(mapSelect.value);
   root.querySelector('[data-field="fit"]').onchange = resizeWorld;
   root.querySelectorAll('[data-coord]').forEach((input) => input.onchange = () => { updateFieldsToData(); });
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   canvas.addEventListener('pointerdown', (e) => {
-    drag = e.button === 2 || e.button === 1; previous = [e.clientX, e.clientY]; downPos = previous; canvas.setPointerCapture(e.pointerId);
+    drag = e.button === 2 || e.button === 1; previous = [e.clientX, e.clientY]; downPos = previous; canvas.setPointerCapture(e.pointerId); boxClicked = false; markerClicked = false;
     if (e.button === 0 && data) { setRayFromEvent(e); const hit = ray.intersectObjects(markerRoot.children, true).find((h) => { let n = h.object; while (n && !n.userData.markerKey) n = n.parent; return !!n; });
-      if (hit) { let n = hit.object; while (n && !n.userData.markerKey) n = n.parent; draggingMarker = n.userData.markerKey; $('[data-field="marker"]').value = draggingMarker; }
+      if (hit) { let n = hit.object; while (n && !n.userData.markerKey) n = n.parent; draggingMarker = n.userData.markerKey; markerClicked = true; $('[data-field="marker"]').value = draggingMarker; }
+      else {
+        const objectHit = builtWorld && ray.intersectObjects(builtWorld.children, false)[0];
+        if (objectHit) {
+          const index = objectHit.object.userData.boxIndex; boxClicked = true; selectBox(index);
+          if (toolMode === 'move' || toolMode === 'scale') {
+            draggingBox = index; boxDragMode = toolMode; boxDragAnchor = floorHit() || objectHit.point.clone();
+            const b = data.boxes[index]; boxDragStart = { x: b.x, z: b.z, w: b.w, d: b.d, h: b.h };
+          }
+        }
+      }
     }
   });
   canvas.addEventListener('pointermove', (e) => {
     if (draggingMarker && (e.buttons & 1)) { setRayFromEvent(e); const p = floorHit(); if (p) setMarker(draggingMarker, p.x, p.z); return; }
+    if (draggingBox >= 0 && (e.buttons & 1)) {
+      setRayFromEvent(e); const p = floorHit(), b = data.boxes[draggingBox];
+      if (p && b && boxDragAnchor && boxDragStart) {
+        if (boxDragMode === 'move') { b.x = clamp(boxDragStart.x + p.x - boxDragAnchor.x, -data.halfX + b.w / 2, data.halfX - b.w / 2); b.z = clamp(boxDragStart.z + p.z - boxDragAnchor.z, -data.halfZ + b.d / 2, data.halfZ - b.d / 2); }
+        else { b.w = clamp(boxDragStart.w + (p.x - boxDragAnchor.x) * 2, .3, 180); b.d = clamp(boxDragStart.d + (p.z - boxDragAnchor.z) * 2, .3, 180); b.h = clamp(boxDragStart.h - (e.clientY - downPos[1]) * .05, .25, 20); }
+        updateBoxMesh(draggingBox); syncBoxFields();
+      }
+      return;
+    }
     if (!drag || !freecam) return; yaw -= (e.clientX - previous[0]) * .004; pitch = clamp(pitch - (e.clientY - previous[1]) * .004, -1.45, 1.45); previous = [e.clientX, e.clientY];
   });
   canvas.addEventListener('pointerup', (e) => {
     const moved = Math.hypot(e.clientX - downPos[0], e.clientY - downPos[1]) > 5;
-    if (!moved && e.button === 0 && data) {
+    const wasBoxDrag = draggingBox >= 0;
+    if (!moved && e.button === 0 && data && !wasBoxDrag && !markerClicked && !boxClicked) {
       setRayFromEvent(e);
       const hits = ray.intersectObjects(markerRoot.children, true), hit = hits.find((h) => h.object.parent?.userData.markerKey || h.object.parent?.parent?.userData.markerKey);
       if (hit) {
@@ -204,10 +304,14 @@ export function createMapAdmin({ mapIds, mapNames, mapDefinitions = {}, renderer
         if (point) setMarker($('[data-field="marker"]').value, point.x, point.z);
       }
     }
-    drag = false; draggingMarker = null;
+    if (e.button === 0 && boxClicked && !wasBoxDrag) {
+      setRayFromEvent(e); const objectHit = builtWorld && ray.intersectObjects(builtWorld.children, false)[0];
+      if (objectHit) selectBox(objectHit.object.userData.boxIndex);
+    }
+    drag = false; draggingMarker = null; draggingBox = -1; boxDragAnchor = null; boxDragStart = null;
   });
   canvas.addEventListener('wheel', (e) => { e.preventDefault(); speed = clamp(speed * (e.deltaY > 0 ? .85 : 1.18), 2, 160); }, { passive: false });
-  addEventListener('keydown', (e) => { if (!opened) return; if (e.code === 'Escape') { close(); return; } if (e.target?.matches?.('input,select,textarea,button')) return; keys.add(e.code); });
+  addEventListener('keydown', (e) => { if (!opened) return; if (e.code === 'Escape') { close(); return; } if (e.target?.matches?.('input,select,textarea,button')) return; if (!drag && e.code === 'KeyW') { setTool('move'); return; } if (!drag && e.code === 'KeyR') { setTool('scale'); return; } if (!drag && e.code === 'KeyE') { setTool('rotate'); return; } keys.add(e.code); });
   addEventListener('keyup', (e) => keys.delete(e.code));
   addEventListener('resize', () => { if (opened) resize(); });
   return { open, close };

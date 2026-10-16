@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZORTLORANT — Taktiksel FPS</title>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+<script src="config.js"></script>
+<link rel="stylesheet" href="style.css">
+<script>
+if (location.protocol === 'file:') {
+  document.addEventListener('DOMContentLoaded', function () {
+    document.body.innerHTML = '<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:6vw;background:#0f1923;color:#ece8e1;font-family:Bahnschrift,Arial Narrow,sans-serif"><div style="max-width:560px;line-height:1.6"><h1 style="font-size:2.4rem;margin-bottom:1rem;color:#ff4655">Bu dosya çift tıkla açılamaz</h1><p>Oyun bir sunucu gerektirir; tarayıcı <b>index.html</b>\'i doğrudan açınca güvenlik nedeniyle engeller.</p><p style="margin-top:1rem"><b>Yapman gereken:</b> ana klasördeki <b>start.bat</b> dosyasına çift tıkla (Node.js kurulu olmalı). Tarayıcı kendiliğinden <b>http://localhost:3000</b> adresini açar.</p><p style="margin-top:1rem;color:#8b97a5">Arkadaşların için sunucu penceresinde yazan LAN adresini kullan.</p></div></div>';
+  });
+}
+</script>
+</head>
+<body>
+
+<!-- AÇILIŞ -->
+<div id="boot"><div class="bootLogo"><span>ZORT</span><span>LORANT</span></div><div class="bootBar"><i id="bootFill"></i></div><small id="bootTxt">Ajanlar yükleniyor…</small></div>
+
+<!-- ANA MENÜ -->
+<section id="menu" class="screen">
+  <canvas id="menuBg"></canvas>
+  <div class="menuShade"></div><div class="scan"></div>
+  <div class="slash s1"></div><div class="slash s2"></div>
+  <aside id="snowCountdown" class="snowCountdown" aria-label="Kar topu savaşı yılbaşı sayacı"><span>❄</span><div><b>KAR TOPU SAVAŞINA</b><small>Yılbaşına kalan</small></div><strong data-countdown>--g --:--:--</strong></aside>
+
+  <header class="topbar">
+    <div class="logo"><b>ZORT</b><b>LORANT</b><small>TAKTİKSEL FPS</small></div>
+    <nav class="tabs">
+      <button class="tab on" data-pane="play">OYNA</button>
+      <button class="tab" data-pane="range">POLİGON</button>
+      <button class="tab" data-pane="friends">ARKADAŞLARLA</button>
+      <button class="tab" data-pane="arsenal">CEPHANELİK</button>
+      <button class="tab" data-pane="settings">AYARLAR</button>
+    </nav>
+    <div class="profile">
+      <div id="conn" class="conn">Sunucuya bağlanıyor…</div>
+      <label class="nameBox"><span>OYUNCU</span><input id="name" maxlength="14" placeholder="Oyuncu"></label>
+    </div>
+  </header>
+
+  <!-- OYNA: ajan + silah seçimi -->
+  <aside class="leftCol pane" id="pane-play">
+    <div class="card">
+      <h3>AJAN SEÇ</h3>
+      <div class="selWrap"><select id="agentSel"></select></div>
+      <div id="agentInfo" class="agentInfo"></div>
+    </div>
+  </aside>
+
+  <!-- ATIŞ POLİGONU -->
+  <aside class="leftCol pane hidden" id="pane-range">
+    <div class="card rangeCard">
+      <span class="role">ATIŞ ANTRENMANI</span>
+      <h3>POLİGON</h3>
+      <p class="sub">Farklı mesafelerde yeniden doğan hedeflere çalış. Ajanın ve bir Vandal yanında; maç sayacı yok, botlar sana ateş etmez.</p>
+      <div class="rangeDistances"><span>13 M</span><span>25 M</span><span>37 M</span><span>49 M</span><span>61 M</span></div>
+      <div class="rangeChoice">
+        <span>HEDEF HAREKETİ</span>
+        <div class="seg" id="rangeTargetMode">
+          <button data-target-mode="static">SABİT</button>
+          <button data-target-mode="moving">HAREKETLİ</button>
+        </div>
+      </div>
+      <button id="playRange" class="solid rangeStart">POLİGONA GİR <span>→</span></button>
+      <small class="rangeHint">ESC: fareyi bırak · ekrandaki düğme: ana menü</small>
+    </div>
+  </aside>
+
+  <!-- ARKADAŞLARLA (ONLINE) -->
+  <aside class="leftCol pane hidden" id="pane-friends">
+    <div class="card">
+      <h3>ARKADAŞLARLA OYNA</h3>
+      <p class="sub">Arkadaşlarınla aynı site adresini paylaş, oda koduyla katılsınlar. Ajanını soldaki OYNA sekmesinden seçebilirsin; herkes Classic ile başlar, silahı raunt başında satın alırsın.</p>
+      <div class="seg" id="roomMode"><button data-mode="1">1v1</button><button data-mode="2">2v2</button><button data-mode="3">3v3</button><button data-mode="4">4v4</button><button data-mode="5">5v5</button></div>
+      <div class="modeChoice"><span>MAÇ TÜRÜ</span><div class="seg gameModeChoice"><button data-gamemode="elimination">ELEME</button><button data-gamemode="spike">SPIKE</button></div></div>
+      <button id="createRoom" class="solid">ODA KUR</button>
+    </div>
+    <div class="card">
+      <h3>KODLA KATIL</h3>
+      <div class="joinRow"><input id="code" maxlength="5" placeholder="KOD" autocomplete="off"><button id="joinBtn" class="solid">KATIL</button></div>
+      <h3>AÇIK ODALAR</h3>
+      <ul class="roomList"></ul>
+    </div>
+  </aside>
+
+  <!-- CEPHANELİK -->
+  <aside class="leftCol pane hidden" id="pane-arsenal">
+    <div class="card">
+      <h3>CEPHANELİK</h3>
+      <p class="sub">Bir silaha tıkla, sağda 3B modelini izle.</p>
+      <div id="armList" class="armList"></div>
+      <div id="armStats" class="armStats"></div>
+      <h3>KAPLAMA</h3>
+      <div id="skinRow" class="skinRow"></div>
+    </div>
+  </aside>
+
+  <!-- AYARLAR -->
+  <aside class="leftCol pane hidden" id="pane-settings">
+    <div class="card" id="settingsCard">
+      <h3>AYARLAR</h3>
+      <label class="field">Fare hassasiyeti <output id="sensOut">1.0</output><input id="sens" type="range" min="0.3" max="3" step="0.1" value="1"></label>
+      <label class="field">Görüş açısı (FOV) <output id="fovOut">80</output><input id="setFov" type="range" min="70" max="100" step="1"></label>
+      <label class="field">Ses seviyesi <output id="volOut">80</output><input id="setVol" type="range" min="0" max="1" step="0.05"></label>
+      <h3>NİŞANGAH</h3>
+      <div class="chRow">
+        <div id="chPreview"><div class="chp"><i></i><i></i><i></i><i></i><u></u></div></div>
+        <div class="chFields">
+          <div id="chStyles"></div>
+          <div class="field">Renk <span id="chSwatches"></span><input id="chColor" type="color" title="Özel renk"></div>
+          <label class="field">Saydamlık <output id="chOpaOut"></output><input id="chOpa" type="range" min="0.2" max="1" step="0.05"></label>
+          <label class="field">Uzunluk <output id="chLenOut"></output><input id="chLen" type="range" min="0" max="16" step="1"></label>
+          <label class="field">Kalınlık <output id="chThickOut"></output><input id="chThick" type="range" min="1" max="5" step="1"></label>
+          <label class="field">Boşluk <output id="chGapOut"></output><input id="chGap" type="range" min="0" max="14" step="1"></label>
+          <label class="check"><input id="chDot" type="checkbox"> Orta nokta (artı/daire/T/X için)</label>
+          <label class="check"><input id="chOutline" type="checkbox"> Siyah kenarlık</label>
+        </div>
+      </div>
+      <h3>NİŞAN ALMA <small class="muted">sağ tık</small></h3>
+      <p class="sub">Sağ tıkı basılı tutarak nişan al; bıraktığında dürbün kapanır.</p>
+      <label class="field">Nişan hassasiyeti <output id="adsSensOut">1.00</output><input id="setAdsSens" type="range" min="0.4" max="1.6" step="0.05"></label>
+      <h3>GÖRÜNÜM</h3>
+      <label class="field">Grafik kalitesi
+        <div class="selWrap"><select id="setGraphics"><option value="low">Düşük · en iyi performans</option><option value="medium">Orta · dengeli</option><option value="high">Yüksek · en iyi görüntü</option></select></div>
+      </label>
+      <button id="setFullscreen" type="button">TAM EKRANA GEÇ</button>
+      <label class="check"><input id="setMinimap" type="checkbox"> Mini harita</label>
+      <label class="check"><input id="setBob" type="checkbox"> Silah sallanması</label>
+      <h3>TUŞ ATAMA <small class="muted">tıkla, sonra tuşa bas (Esc: iptal)</small></h3>
+      <div id="bindList" class="bindList"></div>
+      <button id="bindReset">VARSAYILANA DÖN</button>
+      <h3>SABİT TUŞLAR</h3>
+      <ul class="keys">
+        <li><kbd>W A S D</kbd> hareket</li><li><kbd>Sol tık</kbd> ateş</li><li><kbd>Sağ tık</kbd> nişan al</li>
+        <li><kbd>1 2 3</kbd> / tekerlek: silah</li><li><kbd>Tab</kbd> skor</li><li><kbd>Esc</kbd> fareyi bırak</li><li><kbd>Tekerlek</kbd> dürbünde yakınlaştır</li><li><kbd>Yavaş yürü</kbd> dürbünde nefes tut</li><li><kbd>X</kbd> Spike: al / kur / etkisizleştir</li>
+      </ul>
+      <button id="setClose" class="solid hidden">OYUNA DÖN</button>
+    </div>
+  </aside>
+
+  <!-- KUYRUK ÇUBUĞU -->
+  <div class="queue" id="queue">
+    <div class="qBlock"><span>MOD</span><div class="seg" id="botMode"><button data-mode="1">1v1</button><button data-mode="2">2v2</button><button data-mode="3">3v3</button><button data-mode="4">4v4</button><button data-mode="5">5v5</button></div></div>
+    <div class="qBlock"><span>MAÇ TÜRÜ</span><div class="seg gameModeChoice"><button data-gamemode="elimination">ELEME</button><button data-gamemode="spike">SPIKE</button></div></div>
+    <div class="qBlock"><span>BOT ZORLUĞU</span><div class="seg" id="menuLevel"><button data-level="easy">KOLAY</button><button data-level="normal">ORTA</button><button data-level="hard">ZOR</button></div></div>
+    <div class="qBlock"><span>HARİTA</span><div class="selWrap"><select id="mapSel"></select></div></div>
+    <div class="qBlock"><span>ARKADAŞLARLA (ONLINE)</span><div class="seg"><button id="qCreate">ODA KUR</button><button id="qJoin">ODAYA KATIL</button></div></div>
+    <button id="playBots" class="playBtn"><b>BAŞLAT</b><small id="playSub">Orta · 3v3 · yalnızca botlar</small></button>
+  </div>
+
+  <footer class="menuFoot"><span>● BOTLARA KARŞI · ÇEVRİMDIŞI</span><span>İlk 7 raundu kazanan maçı alır</span><span id="mapName">Harita: Haven C-Site</span></footer>
+</section>
+
+<!-- ODAYA KATIL penceresi -->
+<div id="joinModal" class="modal hidden">
+  <div class="modalBox card">
+    <h3>ODAYA KATIL</h3>
+    <div class="joinRow"><input id="code2" maxlength="5" placeholder="ODA KODU" autocomplete="off"><button id="joinBtn2" class="solid">KATIL</button></div>
+    <h3>AÇIK ODALAR</h3>
+    <ul class="roomList"></ul>
+    <button id="joinClose">KAPAT</button>
+  </div>
+</div>
+
+<!-- LOBİ (LAN odası) -->
+<section id="lobby" class="screen hidden">
+  <div class="menuShade"></div><div class="scan"></div>
+  <div class="lobbyWrap">
+    <header class="lobbyHead">
+      <div><span class="muted">ODA KODU</span><strong id="lCode">----</strong></div>
+      <div><span class="muted">MOD</span><strong id="lMode">1v1</strong></div>
+      <div class="lobbyShare"><span class="muted">ARKADAŞLARIN TARAYICIDA BU ADRESİ AÇSIN (localhost değil!)</span><strong id="lUrl"></strong></div>
+      <button id="leaveBtn">ODADAN ÇIK</button>
+    </header>
+    <div class="lobbyBody">
+      <div class="team t0"><h3>SALDIRI</h3><ul id="team0"></ul><button class="joinTeam" data-team="0">Bu takıma geç</button><button class="botAdd hidden" data-team="0">+ Bot ekle</button></div>
+      <div class="agentCol">
+        <div class="card">
+          <h3>AJANIN</h3><div class="selWrap"><select id="lobbyAgent"></select></div><div id="lobbyAgentInfo" class="agentInfo"></div>
+          <h3>HARİTA <small class="muted" id="lobbyMapNote"></small></h3><div class="selWrap"><select id="lobbyMap"></select></div>
+        </div>
+        <div class="seg hidden" id="lobbyLevel"><button data-level="easy">KOLAY BOT</button><button data-level="normal">ORTA BOT</button><button data-level="hard">ZOR BOT</button></div>
+        <button id="startBtn" class="playBtn small"><b>MAÇI BAŞLAT</b></button>
+        <p id="spikeStartHint" class="muted hidden">Tek başına Spike başlatınca boş yerlere botlar eklenir; arkadaşlarınla oynamak için onları bekleyebilirsin.</p>
+        <p id="waitMsg" class="muted hidden">Ev sahibinin maçı başlatması bekleniyor…</p>
+      </div>
+      <div class="team t1"><h3>SAVUNMA</h3><ul id="team1"></ul><button class="joinTeam" data-team="1">Bu takıma geç</button><button class="botAdd hidden" data-team="1">+ Bot ekle</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- OYUN -->
+<div id="game" class="hidden">
+  <canvas id="view"></canvas>
+  <canvas id="minimap" width="200" height="200"></canvas>
+  <div id="crosshair"><i></i><i></i><i></i><i></i><u></u></div>
+  <div id="hitmarker"></div>
+  <div id="adsVig"></div>
+  <div id="sight" class="hidden"></div>
+  <div id="scope" class="hidden">
+    <div id="scopeLens">
+      <svg id="scopeRet" viewBox="-100 -100 200 200" aria-hidden="true">
+        <defs><path id="rt" d="M-100 0H-40M40 0H100M0 40V100"/><path id="rk" d="M-40 0H-4M4 0H40M0 4V40M0 -4V-100"/>
+          <g id="rd"><circle cx="-12" r=".6"/><circle cx="-24" r=".6"/><circle cx="-36" r=".6"/><circle cx="12" r=".6"/><circle cx="24" r=".6"/><circle cx="36" r=".6"/><circle cy="12" r=".6"/><circle cy="24" r=".6"/><circle cy="36" r=".6"/><circle cy="-12" r=".6"/><circle cy="-24" r=".6"/><circle cy="-36" r=".6"/></g></defs>
+        <g fill="none" stroke="#fff" stroke-opacity=".28"><use href="#rt" stroke-width="2.1"/><use href="#rk" stroke-width=".6"/></g>
+        <g fill="none" stroke="#06080b"><use href="#rt" stroke-width="1.5"/><use href="#rk" stroke-width=".22"/></g>
+        <use href="#rd" fill="#06080b"/>
+        <circle r=".7" fill="#ff3b3b" class="rdot"/>
+      </svg>
+      <div class="glare"></div>
+    </div>
+    <div id="scopeInfo"><b id="scopeZoom">3×</b><span>tekerlek: yakınlaştır</span></div>
+    <div id="scopeBreath"><i></i><span>Shift: nefes tut</span></div>
+  </div>
+  <div id="killIcon"></div>
+  <div id="pickHint" class="hidden"></div>
+  <div id="deathCard" class="hidden"></div>
+  <div id="dmgFx"></div><div id="flashFx"></div>
+
+  <div id="topbar">
+    <div class="side t0"><b id="sc0">0</b><span id="alive0" class="pips"></span></div>
+    <div id="timer">0:00</div>
+    <div class="side t1"><b id="sc1">0</b><span id="alive1" class="pips"></span></div>
+  </div>
+  <div id="roundInfo"></div>
+      <div id="objective" class="hidden"></div>
+  <div id="rangeStats" class="hidden"><b>ATIŞ POLİGONU</b><span><strong id="rangeKills">0</strong> HEDEF · <strong id="rangeHits">0</strong> İSABET</span></div>
+  <ul id="killfeed"></ul>
+  <div id="banner"></div>
+  <div id="spectate" class="hidden"></div>
+
+  <!-- sol alt HUD: can · silah · kalan bot -->
+  <div id="hudL">
+    <div class="hudCard">
+      <div class="hpRow"><span class="lbl">CAN</span><b id="hp">100</b><span id="armor"></span></div>
+      <div class="hpBar"><i id="hpBar"></i></div>
+      <div class="wRow"><span id="wname"></span><b id="ammo"></b></div>
+    </div>
+    <div class="hudCard bots"><span class="lbl" id="botsLbl">KALAN BOT</span><b id="botsLeft">0</b></div>
+  </div>
+  <div id="hudC">
+    <div class="abil" id="abE"><kbd>E</kbd><span></span><i></i></div>
+    <div class="abil" id="abQ"><kbd>V</kbd><span></span><i></i></div>
+  </div>
+  <div id="hudR"><ul id="slots"></ul><div id="credits"></div></div>
+
+  <div id="lockHint" class="hidden"><div><p>Oyuna dönmek için tıkla</p><button id="ingameSet">AYARLAR</button> <button id="quitBtn">ANA MENÜYE DÖN</button></div></div>
+
+  <div id="buy" class="hidden">
+    <div class="buyBox">
+      <h2>Satın alma <span id="buyCredits"></span></h2>
+      <div id="buyGrid"></div>
+      <p class="hint">Sayı tuşlarıyla da alabilirsin (1–9) · B ile kapat · tabancalar 2. slota, diğerleri 1. slota gider · 1/2/3: silah değiştir · Q: önceki silah</p>
+    </div>
+  </div>
+
+  <div id="board" class="hidden"></div>
+  <div id="matchEnd" class="hidden"></div>
+  <div id="setOverlay" class="hidden"><div class="setBox"></div></div>
+</div>
+
+<aside id="roomChat" class="roomChat hidden" aria-label="Oda sohbeti">
+  <section id="chatPanel" class="chatPanel hidden" aria-label="Sohbet mesajları">
+    <header><b>ODA SOHBETİ</b><button id="chatClose" type="button" aria-label="Sohbeti kapat">×</button></header>
+    <ol id="chatMessages" aria-live="polite" aria-relevant="additions"></ol>
+    <form id="chatForm"><input id="chatInput" maxlength="180" autocomplete="off" placeholder="Mesaj yaz…" aria-label="Sohbet mesajı"><button type="submit">GÖNDER</button></form>
+  </section>
+  <button id="chatToggle" type="button" aria-expanded="false"><b>SOHBET</b><kbd>ENTER</kbd><i id="chatUnread" class="hidden"></i></button>
+</aside>
+
+<div id="toast"></div>
+<script type="module" src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "zortlorant",
+  "version": "1.0.0",
+  "description": "ZORTLORANT — tarayıcıda botlara karşı taktiksel FPS (Three.js)",
+  "type": "module",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "ws": "^8.18.0" }
+}

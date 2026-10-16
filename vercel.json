@@ -1,0 +1,9 @@
+{
+  "framework": null,
+  "outputDirectory": "public",
+  "functions": {
+    "api/ws.js": {
+      "maxDuration": 300
+    }
+  }
+}
